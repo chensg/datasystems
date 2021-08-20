@@ -1,6 +1,8 @@
-import os
+import time
 import openpyxl
 from pathlib import Path
+from pathlib import PurePath
+from os import walk
 
 from models import DimDate
 from models import FactMaintenanceContractorPayment
@@ -16,10 +18,10 @@ class MainApp(object):
         self.data = []
         self.sheet = None
 
-    def extract(self):
+    def extract(self, xlsx_file):
         # Step 1 Extract: use openpyxl library to open xls file and extract data from the file
         logger.debug(f"Starting Step 1 Extracting data from files")
-        xlsx_file = Path('data', '41091_maintenanceStaffLogbookV1a.xlsx')
+        # xlsx_file = Path('data', '41091_maintenanceStaffLogbookV1a.xlsx')
         wb_obj = openpyxl.load_workbook(xlsx_file)
         self.sheet = wb_obj.active
         logger.debug(f"we find {self.sheet.max_row} rows and {self.sheet.max_column} columns in file {xlsx_file}")
@@ -57,23 +59,35 @@ class MainApp(object):
         logger.debug(f"Step 3 finished")
 
     def mainLoop(self):
-        # step 1
-        self.extract()
-        # step 2
-        self.transform()
-        # step 3
-        self.load()
+
+        logger.debug("Check if there are any new files in the incoming directory")
+
+        # first of all, we need to clearn fact table for the demo purpose
+        DatabaseHelper.getInstance().cleanFactTable()
+        incoming_path = Path('data', 'incoming')
+        done_path = Path('data', 'done')
+        filenames = next(walk(incoming_path), (None, None, []))[2]
+        logger.debug(f"find {len(filenames)} new files in incoming directory")
+        for filename in filenames:
+            xlsx_file = Path(incoming_path, filename)
+            # step 1
+            self.extract(xlsx_file)
+            # step 2
+            self.transform()
+            # step 3
+            self.load()
+            Path(xlsx_file).rename(Path(done_path, filename))
+
+        # close database connection
+        DatabaseHelper.getInstance().close()
 
 def main():
-    # first of all, we need to clearn fact table for the demo proposal
-    DatabaseHelper.getInstance().cleanFactTable()
-
     # create an instance of MainApp
     main = MainApp()
-    main.mainLoop()
-
-    # close database connection
-    DatabaseHelper.getInstance().close()
+    while True:
+        main.mainLoop()
+        logger.debug("sleeping for 60 seconds")
+        time.sleep(60)
 
 if __name__ == "__main__":
     main()

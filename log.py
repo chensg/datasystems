@@ -10,7 +10,7 @@ def setup_logger(name):
 
     # set log file name
     date_str = date.today().strftime("%Y%m%d")
-    log_file = Path('log', f"{date_str}.log")
+    log_file = Path('data', 'log', f"{date_str}.log")
 
     # set logging handlers, logging will display on console as well
     file_handler = logging.FileHandler(log_file, mode = 'w')
