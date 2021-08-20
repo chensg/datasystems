@@ -1,4 +1,5 @@
 import mysql.connector
+import logging
 
 class DatabaseHelper(object):
 
@@ -15,7 +16,7 @@ class DatabaseHelper(object):
             raise Exception("This class is a singleton!")
         else:
             self.__cnx = None
-
+            self.logger = logging.getLogger('root')
             DatabaseHelper.__instance = self
 
     def db(self):
@@ -25,8 +26,16 @@ class DatabaseHelper(object):
                                 host='35.244.65.158',
                                 database='sql6430075')
         elif not self.__cnx.is_connected():
+            # reconnect to database
             self.__cnx.reconnect()
         return self.__cnx
+
+    def cleanFactTable(self):
+        conn = self.db()
+        cursor = conn.cursor()
+        cursor.execute("delete from fact_Maintenance_Contractor_Payment")
+        conn.commit()
+        cursor.close()
 
     def close(self):
         
@@ -35,4 +44,3 @@ class DatabaseHelper(object):
         
         self.__cnx = None
 
-    
