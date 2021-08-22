@@ -288,7 +288,7 @@ class FactMaintenanceContractorPayment(ModelAbstract):
         work_payment = float(row[7]) * float(row[14])
         self.total_amount_paid = work_payment + self.travel_allowance_amount + self.weather_allowance_amount
 
-        print(self.__dict__)
+        self.logger.debug(self.__dict__)
 
     def fillByDataSet(self, data):
         pass

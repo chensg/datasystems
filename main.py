@@ -1,5 +1,5 @@
 import time
-import openpyxl
+import pandas as pd
 from pathlib import Path
 from pathlib import PurePath
 from os import walk
@@ -16,15 +16,15 @@ class MainApp(object):
 
     def __init__(self):
         self.data = []
-        self.sheet = None
+        self.data_frame = None
 
     def extract(self, xlsx_file):
         # Step 1 Extract: use openpyxl library to open xls file and extract data from the file
         logger.debug(f"Starting Step 1 Extracting data from files")
-        # xlsx_file = Path('data', '41091_maintenanceStaffLogbookV1a.xlsx')
-        wb_obj = openpyxl.load_workbook(xlsx_file)
-        self.sheet = wb_obj.active
-        logger.debug(f"we find {self.sheet.max_row} rows and {self.sheet.max_column} columns in file {xlsx_file}")
+        self.data_frame = pd.read_excel(xlsx_file)
+        # self.data_frame.to_html("test.html")
+        # logger.debug(self.data_frame)
+        logger.debug(f"we find {len(self.data_frame.index)} rows and {len(self.data_frame.columns)} columns in file {xlsx_file}")
         logger.debug(f"Step 1 finished")
 
     def transform(self):
@@ -33,7 +33,8 @@ class MainApp(object):
 
         logger.debug(f"Starting Step 2 transforming data")
         self.data = []
-        for i, row in enumerate(self.sheet.iter_rows(values_only = True)):
+
+        for i, row in self.data_frame.iterrows():
             if i == 0:
                 # we ignore the first row, which is the head titles
                 continue
@@ -42,7 +43,7 @@ class MainApp(object):
                 # may be the last row
                 continue
             
-            logger.debug(f"transform data: {row}")
+            logger.debug(f"transform data of row {i}: {row[0]} {row[1]}")
             payment_record = FactMaintenanceContractorPayment()
             payment_record.transform(row)
             self.data.append(payment_record)
@@ -76,7 +77,7 @@ class MainApp(object):
             self.transform()
             # step 3
             self.load()
-            Path(xlsx_file).rename(Path(done_path, filename))
+            #Path(xlsx_file).rename(Path(done_path, filename))
 
         # close database connection
         DatabaseHelper.getInstance().close()
