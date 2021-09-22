@@ -7,6 +7,7 @@ from os import walk
 from models import DimDate
 from models import FactMaintenanceContractorPayment
 from dbhelper import DatabaseHelper
+from weatherhelper import WeatherFetcher
 import log
 
 # set up logger
@@ -91,4 +92,6 @@ def main():
         time.sleep(60)
 
 if __name__ == "__main__":
-    main()
+    # main()
+    weather_info = WeatherFetcher.getCurrentSydneyWeather()
+    logger.debug(weather_info)
