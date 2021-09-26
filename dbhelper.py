@@ -37,10 +37,17 @@ class DatabaseHelper(object):
         conn.commit()
         cursor.close()
 
+    def updateWeatherInfo(self, weather_info):
+        conn = self.db()
+        cursor = conn.cursor()
+        cursor.execute("update fact_Maintenance_Contractor_Payment set Weather_Condition=%s order by Payment_ID desc limit 1", (weather_info.weather,))
+        conn.commit()
+        cursor.close()
+        
+
     def close(self):
         
         if self.__cnx is not None and self.__cnx.is_connected():
             self.__cnx.close()
         
         self.__cnx = None
-

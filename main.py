@@ -92,6 +92,4 @@ def main():
         time.sleep(60)
 
 if __name__ == "__main__":
-    # main()
-    weather_info = WeatherFetcher.getCurrentSydneyWeather()
-    logger.debug(weather_info)
+    main()

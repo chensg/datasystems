@@ -12,19 +12,39 @@ api.openweathermap.org/data/2.5/weather?q={city name}&appid={API key}
 import logging
 import json
 import requests
+from dbhelper import DatabaseHelper
 
 class WeatherInfoResult(object):
     def __init__(self, city, success, json_data=None):
         self.success = success
         self.city = city
-        if success:
-            # transform data
-            # request 1: Set the [weather] field, as [heavy rain  /   rain /  SunnyCloud / snow ]
-            weather = json_data['weather'][0]
-            self.main = weather['main']
-            self.temp = json_data['main']['temp']
-            # request 2: 
-            
+        self.json_data = json_data
+        self.db = DatabaseHelper.getInstance()
+    
+    def transform(self):
+        # transform data
+        # request 1: Set the [weather] field, as [heavy rain  /   rain /  SunnyCloud / snow ]
+        self.weather = self.json_data['weather'][0]['main'].lower()
+        # request 2: Compute  the [temperature] field by using lowest or highest temperature 
+        # Set the [temperature] to [High/ Low /Normal ] 
+        # by setting  
+        #  [High :  (daily highest temperature)  > 35 degrees] 
+        #  [Low : (daily lowest temperature)    <  10 degrees ]
+        #  [Normal    10 <temperature <35 ]
+        temperature_highest = float(self.json_data['main']['temp_max'])
+        temperature_lowest = float(self.json_data['main']['temp_min'])
+        if temperature_highest > 35:
+            self.temperature = "High"
+        elif temperature_lowest < 10:
+            self.temperature = "Low"
+        else:
+            self.temperature = "Normal"
+
+    def load(self):
+        # example only, update the last record in fact table
+        logger = logging.getLogger('root')
+        logger.debug(self.weather)
+        self.db.updateWeatherInfo(self)
 
 class WeatherFetcher(object):
 
@@ -34,7 +54,7 @@ class WeatherFetcher(object):
         logger.debug("WeatherFetcher.getCurrentSydneyWeather")
         city = "sydney"
         appid = "5f663fbed54c152530cd4f6fdab3c221"
-        query = {'q': city, 'appid': appid}
+        query = {'q': city, 'appid': appid, 'units': 'metric'}
         # extract data
         response = requests.get('http://api.openweathermap.org/data/2.5/weather', params=query)
 
@@ -45,7 +65,3 @@ class WeatherFetcher(object):
         else:
             logger.debug(f"WeatherFetcher.getCurrentSydneyWeather return error code: {response.status_code}")
             return WeatherInfoResult(city, False)
-            
-        
-        
-    
