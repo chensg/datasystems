@@ -13,12 +13,17 @@ import log
 # set up logger
 logger = log.setup_logger('root')
 
-if __name__ == "__main__":
-    
-    weather_info = WeatherFetcher.getCurrentSydneyWeather()
-    logger.debug(weather_info.json_data)
-    if weather_info.success:
-        weather_info.transform()
-        weather_info.load()
+def main():
+    # using timer or operating system Cron Job are better ways to do this
+    while True:
+        weather_info = WeatherFetcher.getCurrentSydneyWeather()
+        logger.debug(weather_info.json_data)
+        if weather_info.success:
+            weather_info.transform()
+            weather_info.load()
+        DatabaseHelper.getInstance().close()
+        logger.debug("sleeping for 3600 seconds")
+        time.sleep(60*60)
 
-    DatabaseHelper.getInstance().close()
+if __name__ == "__main__":
+    main()  
